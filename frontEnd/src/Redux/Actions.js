@@ -2,12 +2,13 @@ import Axios from 'axios'
 
 
 export const userLoggedIn = (userInfo, history) => {
-
+    console.log(userInfo)
+    console.log(process.env.BACKEND_URL)
     return async (dispatch) => {
 
         Axios({
             method: "post",
-            url: "http://localhost:8080/userLogin",
+            url: "https://cryptic-reef-81818.herokuapp.com/userLogin",
             data: {
                 userInfo: userInfo.profileObj,
                 token: userInfo.accessToken
@@ -28,13 +29,6 @@ export const userLoggedIn = (userInfo, history) => {
 }
 
 
-// const saveUserInfoToRedux = (userInfo) => {
-//     return {
-//         type: "USER_LOGGED_IN",
-//         payload: userInfo
-//     }
-// }
-
 
 
 export const noteCreateRequestAction = (note) => {
@@ -43,7 +37,7 @@ export const noteCreateRequestAction = (note) => {
 
         await Axios({
             method: "post",
-            url: 'http://localhost:8080/addNote',
+            url: 'https://cryptic-reef-81818.herokuapp.com/addNote',
             data: {
                 userGoogleId: note.userGoogleId,
                 noteText: note.noteText,
@@ -52,19 +46,18 @@ export const noteCreateRequestAction = (note) => {
             }
         }).then((response) => {
             dispatch(getUpdatedNotesAction(note.userGoogleId))
-
         })
 
 
     }
 }
 
-const getUpdatedNotesAction = (userGoogleId) => {
+export const getUpdatedNotesAction = (userGoogleId) => {
     console.log("getUpdatedNotesAction")
     return async (dispatch) => {
         await Axios({
             method: "post",
-            url: "http://localhost:8080/getUpdatedNotes",
+            url: "https://cryptic-reef-81818.herokuapp.com/getUpdatedNotes",
             data: {
                 userGoogleId: userGoogleId
             }

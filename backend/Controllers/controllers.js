@@ -62,15 +62,16 @@ const controller = {
         if (req.body.priority == 'High') {
             const strr = `highPriorityNotes.${req.body.currentlyEditing}.noteText`
             Users.update({ googleId: req.body.userGoogleId }, { $set: { [strr]: req.body.currentlyEditingText } }).then(() => {
-                console.log("done")
+                res.send("done")
             })
 
         }
 
         else if (req.body.priority == 'Medium') {
+            console.log("hhh")
             const strr = `mediumPriorityNotes.${req.body.currentlyEditing}.noteText`
             Users.update({ googleId: req.body.userGoogleId }, { $set: { [strr]: req.body.currentlyEditingText } }).then(() => {
-                console.log("done")
+                res.send("done")
             })
 
         }
@@ -79,7 +80,7 @@ const controller = {
 
             const strr = `lowPriorityNotes.${req.body.currentlyEditing}.noteText`
             Users.update({ googleId: req.body.userGoogleId }, { $set: { [strr]: req.body.currentlyEditingText } }).then(() => {
-                console.log("done")
+                res.send("done")
             })
 
         }
@@ -91,7 +92,7 @@ const controller = {
             const strr = `highPriorityNotes.${req.body.index}`
             Users.update({ googleId: req.body.userGoogleId }, { $unset: { [strr]: 1 } }).then(() => {
                 Users.update({ googleId: req.body.userGoogleId }, { $pull: { "highPriorityNotes": null } }).then(() => {
-                    console.log("done")
+                    res.send("done")
                 })
 
             })
@@ -102,7 +103,7 @@ const controller = {
             const strr = `mediumPriorityNotes.${req.body.index}`
             Users.update({ googleId: req.body.userGoogleId }, { $unset: { [strr]: 1 } }).then(() => {
                 Users.update({ googleId: req.body.userGoogleId }, { $pull: { "mediumPriorityNotes": null } }).then(() => {
-                    console.log("done")
+                    res.send("done")
                 })
 
             })
@@ -113,7 +114,7 @@ const controller = {
             const strr = `lowPriorityNotes.${req.body.index}`
             Users.update({ googleId: req.body.userGoogleId }, { $unset: { [strr]: 1 } }).then(() => {
                 Users.update({ googleId: req.body.userGoogleId }, { $pull: { "lowPriorityNotes": null } }).then(() => {
-                    console.log("done")
+                    res.send("done")
                 })
 
             })

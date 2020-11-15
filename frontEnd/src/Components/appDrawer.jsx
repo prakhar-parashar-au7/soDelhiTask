@@ -18,13 +18,16 @@ import ListItemText from '@material-ui/core/ListItemText';
 import AddIcon from '@material-ui/icons/Add';
 import MailIcon from '@material-ui/icons/Mail';
 import AddNote from './AddNote'
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Image } from 'cloudinary-react'
 import './masonry.css'
 import TextField from '@material-ui/core/TextField';
 import Axios from 'axios'
 import DeleteForeverOutlinedIcon from '@material-ui/icons/DeleteForeverOutlined';
 import Button from '@material-ui/core/Button';
+import { getUpdatedNotesAction } from '../Redux/Actions'
+import { useHistory } from 'react-router-dom';
+import Masonry from 'react-masonry-css'
 
 
 const drawerWidth = 240;
@@ -101,7 +104,10 @@ export default function MiniDrawer() {
     const [AddNoteModal, setAddNoteModal] = React.useState(false);
     const [currentlyEditing, setCurrentlyEditing] = React.useState(-1)
     const [currentlyEditingText, setCurrentlyEditingText] = React.useState("")
+    const [currentPriority, setCurrentPriority] = React.useState("")
     const user = useSelector(state => state.user)
+    const dispatch = useDispatch()
+    const history = useHistory()
 
 
     const handleDrawerOpen = () => {
@@ -113,11 +119,13 @@ export default function MiniDrawer() {
     };
 
 
-    const editNote = (index) => {
+    const editNote = (index, priority) => {
+        setCurrentPriority(priority)
         setCurrentlyEditing(index)
     }
 
     const editText = (e) => {
+
         setCurrentlyEditingText(e.target.value)
     }
 
@@ -125,10 +133,16 @@ export default function MiniDrawer() {
         console.log(priority)
         Axios({
             method: "post",
-            url: "http://localhost:8080/editNote",
+            url: "https://cryptic-reef-81818.herokuapp.com/editNote",
             data: {
                 priority, currentlyEditing, currentlyEditingText, userGoogleId
             }
+        }).then(() => {
+            console.log("hiii")
+            setCurrentlyEditing(-1)
+            setCurrentlyEditingText("")
+            setCurrentPriority("")
+            dispatch(getUpdatedNotesAction(user.googleId, history))
         })
         console.log(currentlyEditing, currentlyEditingText)
     }
@@ -136,14 +150,18 @@ export default function MiniDrawer() {
     const deleteNote = (index, priority, userGoogleId) => {
         Axios({
             method: "post",
-            url: "http://localhost:8080/deleteNote",
+            url: "https://cryptic-reef-81818.herokuapp.com/deleteNote",
             data: {
                 priority, index, userGoogleId
             }
+        }).then(() => {
+            dispatch(getUpdatedNotesAction(user.googleId))
         })
     }
 
-
+    const closeModal = () => {
+        setAddNoteModal(false)
+    }
 
     return (
         <div className={classes.root}>
@@ -209,7 +227,7 @@ export default function MiniDrawer() {
             <main className={classes.content}>
                 <div className={classes.toolbar} />
                 <AddNote
-
+                    closeModal={closeModal}
                     show={AddNoteModal}
                     onHide={() => setAddNoteModal(false)}
 
@@ -217,12 +235,17 @@ export default function MiniDrawer() {
                 <div>
                     <h4>High Priority</h4>
 
-                    <div className="masonry">
+                    <Masonry
+                        breakpointCols={3}
+                        className="my-masonry-grid"
+                        columnClassName="my-masonry-grid_column">
+
+
 
                         {
-                            user.highPriorityNotes.map((note, index) => <div className="masonry-brick">
+                            user.highPriorityNotes.map((note, index) => <div>
                                 {
-                                    (currentlyEditing == index) ?
+                                    (currentlyEditing == index && currentPriority == "High") ?
                                         <div>
                                             <TextField
                                                 id="outlined-multiline-static"
@@ -251,7 +274,7 @@ export default function MiniDrawer() {
                                                     null}
 
                                             {note.noteText}
-                                            <div style={{ float: "right", marginTop: "190px", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
                                                 <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
@@ -267,20 +290,27 @@ export default function MiniDrawer() {
                             </div>)
                         }
 
-                    </div>
+                    </Masonry>
                 </div>
                 <hr width="75%"></hr>
                 <br></br>
+
+
+
+
                 <div>
                     <h4>Medium Priority</h4>
-                    <div className="masonry">
+                    <Masonry
+                        breakpointCols={3}
+                        className="my-masonry-grid"
+                        columnClassName="my-masonry-grid_column">
 
 
                         {
-                            user.mediumPriorityNotes.map((note, index) => <div className="masonry-brick">
+                            user.mediumPriorityNotes.map((note, index) => <div>
 
                                 {
-                                    (currentlyEditing == index) ?
+                                    (currentlyEditing == index && currentPriority == "Medium") ?
                                         <div>
                                             <TextField
                                                 id="outlined-multiline-static"
@@ -311,8 +341,8 @@ export default function MiniDrawer() {
                                                     null}
 
                                             {note.noteText}
-                                            <div style={{ float: "right", marginTop: "190px", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
-                                                <button onClick={() => { editNote(index) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
                                                 </svg></button>
@@ -327,7 +357,7 @@ export default function MiniDrawer() {
 
                             </div>)
                         }
-                    </div>
+                    </Masonry>
                 </div>
 
 
@@ -338,27 +368,34 @@ export default function MiniDrawer() {
 
                 <div>
                     <h4>Low Priority</h4>
-                    <div className="masonry">
+                    <Masonry
+                        breakpointCols={3}
+                        className="my-masonry-grid"
+                        columnClassName="my-masonry-grid_column"
+                    >
 
 
                         {
                             user.lowPriorityNotes.map((note, index) => <div className="masonry-brick">
 
                                 {
-                                    (currentlyEditing == index) ?
+                                    (currentlyEditing == index && currentPriority == "Low") ?
                                         <div>
+
                                             <TextField
                                                 id="outlined-multiline-static"
                                                 fullWidth="true"
                                                 multiline
-                                                rows={9}
+                                                rows={11}
                                                 onChange={editText}
                                                 defaultValue={note.noteText}
                                                 variant="outlined"
-                                            >
-                                                
-                                                <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
-                                            </TextField>
+                                            />
+
+
+
+
+                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
                                         </div>
                                         :
 
@@ -375,8 +412,8 @@ export default function MiniDrawer() {
                                                     null}
 
                                             {note.noteText}
-                                            <div style={{ float: "right", marginTop: "190px", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
-                                                <button onClick={() => { editNote(index) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
                                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
                                                 </svg></button>
@@ -391,7 +428,7 @@ export default function MiniDrawer() {
 
                             </div>)
                         }
-                    </div>
+                    </Masonry>
                 </div>
             </main>
         </div>

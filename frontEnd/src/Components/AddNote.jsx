@@ -23,6 +23,7 @@ const MyVerticallyCenteredModal = (props) => {
 
     const addNote = () => {
         console.log(notePriority)
+        props.closeModal()
         dispatch(noteCreateRequestAction({ userGoogleId, noteText, photoInfo, notePriority }))
     }
 
@@ -83,8 +84,8 @@ const MyVerticallyCenteredModal = (props) => {
 
                     <TextField
                         id="filled-textarea"
-                        label="Speak Up"
-                        placeholder="What's on your mind?"
+                        label="Add a note"
+                        placeholder="Set it's priority too"
                         multiline
                         variant="filled"
                         style={{ width: "400px" }}

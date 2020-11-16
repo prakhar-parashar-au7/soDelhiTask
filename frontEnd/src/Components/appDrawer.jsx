@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -28,6 +28,7 @@ import Button from '@material-ui/core/Button';
 import { getUpdatedNotesAction } from '../Redux/Actions'
 import { useHistory } from 'react-router-dom';
 import Masonry from 'react-masonry-css'
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 
 const drawerWidth = 240;
@@ -101,14 +102,30 @@ export default function MiniDrawer() {
     const classes = useStyles();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(false)
     const [AddNoteModal, setAddNoteModal] = React.useState(false);
     const [currentlyEditing, setCurrentlyEditing] = React.useState(-1)
     const [currentlyEditingText, setCurrentlyEditingText] = React.useState("")
     const [currentPriority, setCurrentPriority] = React.useState("")
-    const user = useSelector(state => state.user)
+    const [isEditHighLoading, setEditHighLoading] = React.useState(false)
+    const [isEditMediumLoading, setEditMediumLoading] = React.useState(false)
+    const [isEditLowLoading, setEditLowLoading] = React.useState(false)
+
     const dispatch = useDispatch()
     const history = useHistory()
 
+
+
+    useEffect(() => {
+        console.log("hwewe")
+    });
+
+    const user = useSelector(state => {
+        if (state) {
+
+            return state.user
+        }
+    })
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -130,7 +147,18 @@ export default function MiniDrawer() {
     }
 
     const sendEditReq = (priority, userGoogleId) => {
-        console.log(priority)
+
+        if (priority == "High") {
+            setEditHighLoading(true)
+        }
+        else if (priority == "Medium") {
+            setEditMediumLoading(true)
+        }
+        else {
+            setEditLowLoading(true)
+        }
+
+
         Axios({
             method: "post",
             url: "https://cryptic-reef-81818.herokuapp.com/editNote",
@@ -142,12 +170,31 @@ export default function MiniDrawer() {
             setCurrentlyEditing(-1)
             setCurrentlyEditingText("")
             setCurrentPriority("")
-            dispatch(getUpdatedNotesAction(user.googleId, history))
+            if (priority == "High") {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditHighLoading))
+            }
+            else if (priority == "Medium") {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditMediumLoading))
+            }
+            else {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditLowLoading))
+
+            }
         })
         console.log(currentlyEditing, currentlyEditingText)
     }
 
     const deleteNote = (index, priority, userGoogleId) => {
+        setCurrentlyEditing(index)
+        if (priority == "High") {
+            setEditHighLoading(true)
+        }
+        else if (priority == "Medium") {
+            setEditMediumLoading(true)
+        }
+        else {
+            setEditLowLoading(true)
+        }
         Axios({
             method: "post",
             url: "https://cryptic-reef-81818.herokuapp.com/deleteNote",
@@ -155,7 +202,20 @@ export default function MiniDrawer() {
                 priority, index, userGoogleId
             }
         }).then(() => {
-            dispatch(getUpdatedNotesAction(user.googleId))
+
+            if (priority == "High") {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditHighLoading))
+                setCurrentlyEditing(-1)
+            }
+            else if (priority == "Medium") {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditMediumLoading))
+                setCurrentlyEditing(-1)
+            }
+            else {
+                dispatch(getUpdatedNotesAction(user.googleId, null, setEditLowLoading))
+                setCurrentlyEditing(-1)
+
+            }
         })
     }
 
@@ -164,273 +224,298 @@ export default function MiniDrawer() {
     }
 
     return (
-        <div className={classes.root}>
-            <CssBaseline />
-            <AppBar
-                position="fixed"
-                className={clsx(classes.appBar, {
-                    [classes.appBarShift]: open,
-                })}
-            >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={handleDrawerOpen}
-                        edge="start"
-                        className={clsx(classes.menuButton, {
-                            [classes.hide]: open,
-                        })}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap>
-                        Noter
+
+        (user) ?
+            <div className={classes.root}>
+                <CssBaseline />
+                <AppBar
+                    position="fixed"
+                    className={clsx(classes.appBar, {
+                        [classes.appBarShift]: open,
+                    })}
+                >
+                    <Toolbar>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            onClick={handleDrawerOpen}
+                            edge="start"
+                            className={clsx(classes.menuButton, {
+                                [classes.hide]: open,
+                            })}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <Typography variant="h6" noWrap>
+                            Noter
           </Typography>
-                </Toolbar>
-            </AppBar>
-            <Drawer
-                variant="permanent"
-                className={clsx(classes.drawer, {
-                    [classes.drawerOpen]: open,
-                    [classes.drawerClose]: !open,
-                })}
-                classes={{
-                    paper: clsx({
+                    </Toolbar>
+                </AppBar>
+                <Drawer
+                    variant="permanent"
+                    className={clsx(classes.drawer, {
                         [classes.drawerOpen]: open,
                         [classes.drawerClose]: !open,
-                    }),
-                }}
-            >
-                <div className={classes.toolbar}>
-                    <h5>{user.name}</h5>
-                    <IconButton onClick={handleDrawerClose}>
-                        {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                    </IconButton>
-                </div>
-                <br></br>
-                <div style={{ display: "grid", gridTemplateColumns: "auto auto" }}>
-                    <img src={user.imageUrl} height="50px" width="50px" style={{ marginLeft: "10px" }}></img>
-                    {
-                        (open == true) ? <p style={{ marginTop: "10px" }}>{user.email}</p> : null
-                    }
-                </div>
-
-                <List>
-                    <ListItem button key="Add" onClick={() => { setAddNoteModal(true); setOpen(false) }}>
-                        <ListItemIcon> <AddIcon /></ListItemIcon>
-                        <ListItemText primary="Add" />
-
-                    </ListItem>
-                </List>
-            </Drawer>
-            <main className={classes.content}>
-                <div className={classes.toolbar} />
-                <AddNote
-                    closeModal={closeModal}
-                    show={AddNoteModal}
-                    onHide={() => setAddNoteModal(false)}
-
-                />
-                <div>
-                    <h4>High Priority</h4>
-
-                    <Masonry
-                        breakpointCols={3}
-                        className="my-masonry-grid"
-                        columnClassName="my-masonry-grid_column">
-
-
-
+                    })}
+                    classes={{
+                        paper: clsx({
+                            [classes.drawerOpen]: open,
+                            [classes.drawerClose]: !open,
+                        }),
+                    }}
+                >
+                    <div className={classes.toolbar}>
+                        <h5>{(user) ? user.name : null}</h5>
+                        <IconButton onClick={handleDrawerClose}>
+                            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                        </IconButton>
+                    </div>
+                    <br></br>
+                    <div style={{ display: "grid", gridTemplateColumns: "auto auto" }}>
+                        <img src={(user) ? user.imageUrl : null} height="50px" width="50px" style={{ marginLeft: "10px" }}></img>
                         {
-                            user.highPriorityNotes.map((note, index) => <div>
-                                {
-                                    (currentlyEditing == index && currentPriority == "High") ?
-                                        <div>
-                                            <TextField
-                                                id="outlined-multiline-static"
-                                                fullWidth="true"
-                                                multiline
-                                                rows={11}
-                                                onChange={editText}
-                                                defaultValue={note.noteText}
-                                                variant="outlined"
-                                            >
-
-
-                                            </TextField>
-                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
-                                        </div>
-                                        :
-                                        <div>
-                                            {
-                                                (!(note.photoInfo == "")) ?
-
-                                                    <div>
-                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
-                                                        <hr width="75%"></hr>
-                                                    </div>
-                                                    :
-                                                    null}
-
-                                            {note.noteText}
-                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
-                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
-                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
-                                                </svg></button>
-
-                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}> <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
-                                                </svg></button>
-                                            </div>
-                                        </div>
-                                }
-                            </div>)
+                            (open == true) ? <p style={{ marginTop: "10px" }}>{user ? user.email : null}</p> : null
                         }
+                    </div>
 
-                    </Masonry>
-                </div>
-                <hr width="75%"></hr>
-                <br></br>
+                    <List>
+                        <ListItem button key="Add" onClick={() => { setAddNoteModal(true); setOpen(false) }}>
+                            <ListItemIcon> <AddIcon /></ListItemIcon>
+                            <ListItemText primary="Add" />
+
+                        </ListItem>
+                    </List>
+                </Drawer>
+                <main className={classes.content}>
+                    <div className={classes.toolbar} />
+                    <AddNote
+                        closeModal={closeModal}
+                        show={AddNoteModal}
+                        onHide={() => setAddNoteModal(false)}
+
+                    />
 
 
+                    <div>
+                        <h4>High Priority</h4>
 
-
-                <div>
-                    <h4>Medium Priority</h4>
-                    <Masonry
-                        breakpointCols={3}
-                        className="my-masonry-grid"
-                        columnClassName="my-masonry-grid_column">
-
-
-                        {
-                            user.mediumPriorityNotes.map((note, index) => <div>
-
-                                {
-                                    (currentlyEditing == index && currentPriority == "Medium") ?
-                                        <div>
-                                            <TextField
-                                                id="outlined-multiline-static"
-                                                fullWidth="true"
-                                                multiline
-                                                rows={11}
-                                                onChange={editText}
-                                                defaultValue={note.noteText}
-                                                variant="outlined"
-                                            />
-                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
-                                        </div>
-                                        :
-
-                                        <div>
-
-                                            {
+                        <Masonry
+                            breakpointCols={3}
+                            className="my-masonry-grid"
+                            columnClassName="my-masonry-grid_column">
 
 
 
-                                                (!(note.photoInfo == "")) ?
+                            {
+                                user.highPriorityNotes.map((note, index) => <div>
+                                    {
 
-                                                    <div>
-                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
-                                                        <hr width="75%"></hr>
-                                                    </div>
-                                                    :
-                                                    null}
-
-                                            {note.noteText}
-                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
-                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
-                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
-                                                </svg></button>
-                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
-                                                </svg></button>
-                                            </div>
-
-                                        </div>
-                                }
-
-                            </div>)
-                        }
-                    </Masonry>
-                </div>
-
-
-                <hr width="75%"></hr>
-                <br></br>
+                                        (isEditHighLoading && currentlyEditing == index) ? <CircularProgress /> :
+                                            <div>
+                                                {
+                                                    (currentlyEditing == index && currentPriority == "High") ?
 
 
 
-                <div>
-                    <h4>Low Priority</h4>
-                    <Masonry
-                        breakpointCols={3}
-                        className="my-masonry-grid"
-                        columnClassName="my-masonry-grid_column"
-                    >
+                                                        <div>
+                                                            <TextField
+                                                                id="outlined-multiline-static"
+                                                                fullWidth="true"
+                                                                multiline
+                                                                rows={11}
+                                                                onChange={editText}
+                                                                defaultValue={note.noteText}
+                                                                variant="outlined"
+                                                            >
 
 
-                        {
-                            user.lowPriorityNotes.map((note, index) => <div className="masonry-brick">
+                                                            </TextField>
+                                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
+                                                        </div>
 
-                                {
-                                    (currentlyEditing == index && currentPriority == "Low") ?
-                                        <div>
+                                                        :
+                                                        <div style={{ margin: "10px" }}>
+                                                            {
+                                                                (!(note.photoInfo == "")) ?
 
-                                            <TextField
-                                                id="outlined-multiline-static"
-                                                fullWidth="true"
-                                                multiline
-                                                rows={11}
-                                                onChange={editText}
-                                                defaultValue={note.noteText}
-                                                variant="outlined"
-                                            />
+                                                                    <div>
+                                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
+                                                                        <hr width="75%"></hr>
+                                                                    </div>
+                                                                    :
+                                                                    null}
+
+                                                            {note.noteText}
+                                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                                                </svg></button>
+
+                                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}> <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                                                </svg></button>
+                                                            </div>
+                                                        </div>
+                                                }
+                                            </div>}
+                                </div>)
+                            }
+
+                        </Masonry>
+                    </div>
+                    <hr width="75%"></hr>
+                    <br></br>
 
 
 
 
-                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
-                                        </div>
-                                        :
-
-                                        <div>
-
-                                            {
-                                                (!(note.photoInfo == "")) ?
-
-                                                    <div>
-                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
-                                                        <hr width="75%"></hr>
-                                                    </div>
-                                                    :
-                                                    null}
-
-                                            {note.noteText}
-                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
-                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
-                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
-                                                </svg></button>
-                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
-                                                </svg></button>
-                                            </div>
-                                        </div>
-                                }
+                    <div>
+                        <h4>Medium Priority</h4>
+                        <Masonry
+                            breakpointCols={3}
+                            className="my-masonry-grid"
+                            columnClassName="my-masonry-grid_column">
 
 
-                            </div>)
-                        }
-                    </Masonry>
-                </div>
-            </main>
-        </div>
+                            {
+                                user.mediumPriorityNotes.map((note, index) => <div>
+
+                                    {
+
+                                        (isEditMediumLoading && currentlyEditing == index) ? <CircularProgress /> :
+                                            <div>
+                                                {
+                                                    (currentlyEditing == index && currentPriority == "Medium") ?
+                                                        <div>
+                                                            <TextField
+                                                                id="outlined-multiline-static"
+                                                                fullWidth="true"
+                                                                multiline
+                                                                rows={11}
+                                                                onChange={editText}
+                                                                defaultValue={note.noteText}
+                                                                variant="outlined"
+                                                            />
+                                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
+
+                                                        </div>
+                                                        :
+
+                                                        <div style={{ margin: "10px" }}>
+
+                                                            {
+
+
+
+                                                                (!(note.photoInfo == "")) ?
+
+                                                                    <div>
+                                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
+                                                                        <hr width="75%"></hr>
+                                                                    </div>
+                                                                    :
+                                                                    null}
+
+                                                            {note.noteText}
+                                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                                                </svg></button>
+                                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                                                </svg></button>
+                                                            </div>
+
+                                                        </div>
+                                                }
+                                            </div>}
+                                </div>)
+                            }
+                        </Masonry>
+                    </div>
+
+
+                    <hr width="75%"></hr>
+                    <br></br>
+
+
+
+                    <div>
+                        <h4>Low Priority</h4>
+                        <Masonry
+                            breakpointCols={3}
+                            className="my-masonry-grid"
+                            columnClassName="my-masonry-grid_column"
+                        >
+
+
+                            {
+                                user.lowPriorityNotes.map((note, index) => <div>
+
+                                    {
+
+                                        (isEditLowLoading && currentlyEditing == index) ? <CircularProgress /> :
+                                            <div>
+                                                {
+                                                    (currentlyEditing == index && currentPriority == "Low") ?
+                                                        <div>
+
+                                                            <TextField
+                                                                id="outlined-multiline-static"
+                                                                fullWidth="true"
+                                                                multiline
+                                                                rows={11}
+                                                                onChange={editText}
+                                                                defaultValue={note.noteText}
+                                                                variant="outlined"
+                                                            />
+
+
+
+
+                                                            <Button variant="contained" color="primary" size="small" onClick={(e) => sendEditReq(note.notePriority, note.userGoogleId)}>edit</Button>
+
+                                                        </div>
+                                                        :
+
+                                                        <div style={{ margin: "10px" }}>
+
+                                                            {
+                                                                (!(note.photoInfo == "")) ?
+
+                                                                    <div>
+                                                                        <Image publicId={note.photoInfo} width="100" height="100" cloudName="prakhar-parashar" />
+                                                                        <hr width="75%"></hr>
+                                                                    </div>
+                                                                    :
+                                                                    null}
+
+                                                            {note.noteText}
+                                                            <div style={{ float: "right", marginRight: "20px", display: "grid", gridTemplateColumns: "auto auto", gridGap: "20px" }}>
+                                                                <button onClick={() => { editNote(index, note.notePriority) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                                                </svg></button>
+                                                                <button onClick={() => { deleteNote(index, note.notePriority, note.userGoogleId) }}><svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-trash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                                                    <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                                                </svg></button>
+                                                            </div>
+                                                        </div>
+                                                }
+                                            </div>}
+                                </div>)
+                            }
+                        </Masonry>
+                    </div>
+                </main>
+            </div>
+            : null
+
+
     );
 }

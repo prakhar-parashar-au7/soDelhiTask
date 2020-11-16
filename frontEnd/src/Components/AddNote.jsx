@@ -11,20 +11,26 @@ import PhotoUploader from './PhotoUploader';
 import { noteCreateRequestAction } from '../Redux/Actions'
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const MyVerticallyCenteredModal = (props) => {
 
     const [noteText, setNoteText] = useState("")
     const [photoInfo, setPhotoInfo] = useState("")
     const [notePriority, setNotePriority] = useState("")
+    const [isLoading, setIsLoading] = React.useState(false)
     const dispatch = useDispatch()
 
     const userGoogleId = useSelector(state => state.user.googleId)
 
     const addNote = () => {
         console.log(notePriority)
-        props.closeModal()
-        dispatch(noteCreateRequestAction({ userGoogleId, noteText, photoInfo, notePriority }))
+        setIsLoading(true)
+
+        dispatch(noteCreateRequestAction({ userGoogleId, noteText, photoInfo, notePriority }, props.closeModal, setIsLoading))
+        setNoteText("")
+        setNotePriority("")
+        setPhotoInfo("")
     }
 
     const setPriority = (priority) => {
@@ -77,32 +83,37 @@ const MyVerticallyCenteredModal = (props) => {
 
 
             <Modal.Body>
+                {
 
 
+                    (isLoading) ? <CircularProgress />
+                        :
+                        <div>
+                            <div id="note" style={{ display: "grid", gridTemplateColumns: "auto auto auto" }}>
 
-                <div id="note" style={{ display: "grid", gridTemplateColumns: "auto auto auto" }}>
+                                <TextField
+                                    id="filled-textarea"
+                                    label="Add a note"
+                                    placeholder="Set it's priority too"
+                                    multiline
+                                    variant="filled"
+                                    style={{ width: "400px" }}
+                                    defaultValue={noteText}
+                                    value={noteText}
+                                    onChange={(e) => { setNoteText(e.target.value) }}
+                                />
 
-                    <TextField
-                        id="filled-textarea"
-                        label="Add a note"
-                        placeholder="Set it's priority too"
-                        multiline
-                        variant="filled"
-                        style={{ width: "400px" }}
-                        defaultValue={noteText}
-                        value={noteText}
-                        onChange={(e) => { setNoteText(e.target.value) }}
-                    />
+                                <PhotoUploader photoInfo={savePhotoInfo} />
 
-                    <PhotoUploader photoInfo={savePhotoInfo} />
+                                <Button variant="contained" size="small" color="primary" onClick={addNote}>Add Note</Button>
 
-                    <Button variant="contained" size="small" color="primary" onClick={addNote}>Add Note</Button>
-
-                </div>
-                <br></br>
-                {(photoInfo === "") ? null
-                    :
-                    <Image publicId={photoInfo} cloudName="prakhar-parashar" width="300" height="300" />}
+                            </div>
+                            <br></br>
+                            {(photoInfo === "") ? null
+                                :
+                                <Image publicId={photoInfo} cloudName="prakhar-parashar" width="300" height="300" />}
+                        </div>
+                }
             </Modal.Body>
         </Modal>
 

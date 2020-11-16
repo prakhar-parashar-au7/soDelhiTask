@@ -30,6 +30,8 @@ app.post('/editNote', controller.editNote)
 // To delete a note
 app.post('/deleteNote', controller.deleteNote)
 
+//app.post('/gotToken', controller.gotToken)
+
 app.listen(process.env.PORT || 8080, () => {
     console.log('Server listening on port 8080')
 })

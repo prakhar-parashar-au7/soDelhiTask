@@ -1,9 +1,8 @@
 import Axios from 'axios'
 
 
-export const userLoggedIn = (userInfo, history) => {
-    console.log(userInfo)
-    console.log(process.env.BACKEND_URL)
+export const userLoggedIn = (userInfo, history, setIsLoading) => {
+
     return async (dispatch) => {
 
         Axios({
@@ -15,7 +14,10 @@ export const userLoggedIn = (userInfo, history) => {
             }
         }).then((response) => {
             console.log(response.data)
+            //  localStorage.clear()
+            //  localStorage.setItem("userEmail", userInfo.profileObj.email)
             dispatch(storeInfoInRedux(response.data))
+            setIsLoading(false)
             history.push('/Home')
         })
 
@@ -31,8 +33,8 @@ export const userLoggedIn = (userInfo, history) => {
 
 
 
-export const noteCreateRequestAction = (note) => {
-    console.log("postcreateaction")
+export const noteCreateRequestAction = (note, closeModal, setIsLoading) => {
+
     return async (dispatch) => {
 
         await Axios({
@@ -45,14 +47,14 @@ export const noteCreateRequestAction = (note) => {
                 notePriority: note.notePriority
             }
         }).then((response) => {
-            dispatch(getUpdatedNotesAction(note.userGoogleId))
+            dispatch(getUpdatedNotesAction(note.userGoogleId, closeModal, setIsLoading))
         })
 
 
     }
 }
 
-export const getUpdatedNotesAction = (userGoogleId) => {
+export const getUpdatedNotesAction = (userGoogleId, closeModal, setIsLoading) => {
     console.log("getUpdatedNotesAction")
     return async (dispatch) => {
         await Axios({
@@ -65,6 +67,11 @@ export const getUpdatedNotesAction = (userGoogleId) => {
         }).then((res) => {
             console.log(res.data[0])
             dispatch(storeInfoInRedux(res.data[0]))
+            setIsLoading(false)
+            if (closeModal) {
+                closeModal()
+            }
+
         })
 
 

@@ -9,11 +9,12 @@ const controller = {
 
 
     userLogin: (req, res) => {
-        console.log(req.body.userInfo)
+        console.log(req.body.userInfo, "hey")
         Users.find({ googleId: req.body.userInfo.googleId }, (err, user) => {
             if (user.length == 0) {
-                req.body.userInfo.token = req.body.token
-                Users.create(req.body.userInfo).then((err, user) => {
+               // req.body.userInfo.token = req.body.token
+                Users.create(req.body.userInfo).then((user) => {
+
                     res.send(user)
                 })
             }
@@ -35,7 +36,8 @@ const controller = {
                 res.send("New note added")
             })
         }
-        else {
+        else  {
+            req.body.notePriority = "Low"
             Users.update({ googleId: req.body.userGoogleId }, { $push: { lowPriorityNotes: req.body } }).then(() => {
                 res.send("New note added")
             })
@@ -122,7 +124,13 @@ const controller = {
 
 
 
-    }
+    },
+
+    // gotToken: (req, res) => {
+    //     Users.find({ email: req.body.userEmail }, (err, user) => {
+    //         res.send(user[0])
+    //     })
+    // }
 }
 
 

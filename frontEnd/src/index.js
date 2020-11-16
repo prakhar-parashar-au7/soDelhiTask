@@ -7,6 +7,7 @@ import axios from 'axios'
 
 axios.defaults.baseURL = process.env.BACKEND_URL
 
+
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>

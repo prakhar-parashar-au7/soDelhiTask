@@ -11,14 +11,6 @@ const userReducer = (state = initialState, action) => {
 
     switch (action.type) {
 
-        // case ("USER_LOGGED_IN"):
-        // const user = action.payload
-
-        // return {
-        //     ...state, user
-        // }
-
-
         case ("NOTES_FROM_DB"):
             console.log("reducer")
 
@@ -29,7 +21,10 @@ const userReducer = (state = initialState, action) => {
             return {
                 ...state, user
             }
-
+        default :
+        return {
+            ...state
+        }
     }
 }
 

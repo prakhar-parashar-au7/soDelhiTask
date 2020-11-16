@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-bootstrap'
 import Axios from 'axios'
-import Priority from './Priority'
+import Priority from './Prioritys'
 //import './styles/postTextModel.css'
 import { Image } from 'cloudinary-react'
 //import ProfileButton from './profileButton'
@@ -63,13 +63,11 @@ const MyVerticallyCenteredModal = (props) => {
             <Modal.Header closeButton>
 
                 <Modal.Title id="contained-modal-title-vcenter">
-                    <div style={{ display: "grid", gridTemplateColumns: "500px auto auto", gridGap: "" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "500px  auto", gridGap: "" }}>
                         <div>
                             Add a note
                         </div>
-                        <div>
-                            <small>Set Priority</small>
-                        </div>
+
                         <div>
 
 

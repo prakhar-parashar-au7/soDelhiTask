@@ -1,66 +1,46 @@
-import { useEffect } from 'react';
+
 import { BrowserRouter, Route } from 'react-router-dom'
-import Drawer from './Components/appDrawer'
+import Home from './Components/Home'
 import Login from './Components/Login'
-import axios from 'axios'
-import { useDispatch, useSelector } from 'react-redux';
-import { storeInfoInRedux } from './Redux/Actions'
-import { useHistory, Redirect } from 'react-router-dom'
+import { userLoggedIn } from './Redux/Actions'
+import { useHistory } from 'react-router-dom'
+import { useDispatch } from 'react-redux';
+import './App.css'
+
 
 
 function App() {
 
-  // const dispatch = useDispatch()
-  // const history = useHistory()
 
-  // const user = useSelector((state) => {
-  //   if (state) {
-  //     return state.user
-  //   }
-  // })
+  const dispatch = useDispatch()
+  const history = useHistory()
 
-  // useEffect(() => {
-  //   if (history) {
-  //     history.push("/Home")
 
-  //   }
 
-  // }, [])
+  if (localStorage.getItem("userGoogleId")) {
+    const googleId = localStorage.getItem("userGoogleId")
+    const userInfo = {
+      profileObj: {
+        googleId: googleId
+      }
 
-  // if (localStorage.getItem("userEmail")) {
+    }
 
-  //   console.log(localStorage.getItem("userEmail"))
-  //   axios({
-  //     method: "post",
-  //     url: "http://localhost:8080/gotToken",
-  //     data: {
-  //       userEmail: localStorage.getItem("userEmail")
-  //     }
-  //   }).then((response) => {
-  //     console.log(response.data)
-  //     dispatch(storeInfoInRedux(response.data))
-  //     // history.push('/Home')
+    dispatch(userLoggedIn(userInfo))
 
-  //   })
-  //}
-  //   axios({
-  //     method: "post",
-  //     url: "http://localhost:8080/gotToken",
-  //     data: {
-  //       token: localStorage.getItem("noterToken")
-  //     }
-  //   }).then((response) => {
-  //     console.log(response.body)
-  //   })
-  // }
+  }
+
 
 
   return (
     <div className="App">
+
+
       <BrowserRouter>
         <Route exact path="/" component={Login} />
-        <Route exact path="/Home" component={Drawer} />
+        <Route exact path="/Home" component={Home} />
       </BrowserRouter>
+
     </div>
   );
 }
